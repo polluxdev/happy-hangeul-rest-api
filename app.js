@@ -10,6 +10,7 @@ dotenv.config();
 const database = require("./config/database");
 
 const wordRoutes = require("./routes/word");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
+app.use(apiVersion + "/auth", authRoutes);
 app.use(apiVersion + "/words", wordRoutes);
 
 app.use((error, req, res, next) => {
