@@ -10,8 +10,8 @@ router.route("/").get(wordController.getWords).post(wordController.postWord);
 
 router
   .route("/:wordId")
-  .get(wordController.getWord)
-  .patch(wordController.patchWord)
-  .delete(wordController.deleteWord);
+  .get(wordController.checkWord, wordController.getWord)
+  .patch(wordController.checkWord, wordController.patchWord)
+  .delete(wordController.checkWord, wordController.deleteWord);
 
 module.exports = router;

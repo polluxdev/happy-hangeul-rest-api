@@ -9,8 +9,11 @@ dotenv.config();
 
 const database = require("./config/database");
 
+const AppError = require("./utils/appError");
+
 const wordRoutes = require("./routes/word");
 const authRoutes = require("./routes/auth");
+const globalErrorHandler = require("./controllers/error");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -28,22 +31,41 @@ app.use(cors());
 app.use(apiVersion + "/auth", authRoutes);
 app.use(apiVersion + "/words", wordRoutes);
 
-app.use((error, req, res, next) => {
-  const statusCode = error.statusCode || 500;
-  const status = error.status || "fail";
-  const message = error.message;
-  const data = error.data;
-
-  res.status(statusCode).json({ status: status, message: message, data: data });
+app.all("*", (req, res, next) => {
+  const error = new AppError(
+    `Can't find ${req.originalUrl} on this server!`,
+    404
+  );
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-mongoose.connect(database.uri, database.options, (err) => {
-  if (err) {
-    console.error("FAILED TO CONNECT TO MONGODB!");
-    console.error(err);
-  } else {
+app.use(globalErrorHandler);
+
+mongoose
+  .connect(database.uri, database.options)
+  .then(() => {
     console.log("CONNECTED TO MONGODB!");
-  }
+  })
+  .catch(() => {
+    console.error("FAILED TO CONNECT TO MONGODB!");
+  });
+
+const server = app.listen(port);
+
+process.on("unhandledRejection", (error) => {
+  console.log("UNHANDLED REJECTION!");
+  console.log(error);
+
+  server.close(() => {
+    process.exit(1);
+  });
 });
 
-app.listen(port);
+process.on("uncaughtException", (error) => {
+  console.log("UNCAUGHT EXCEPTION!");
+  console.log(error.name, error.message);
+
+  server.close(() => {
+    process.exit(1);
+  });
+});

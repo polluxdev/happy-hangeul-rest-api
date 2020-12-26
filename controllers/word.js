@@ -3,117 +3,102 @@ const mongoose = require("mongoose");
 const Word = require("../models/word");
 
 const APIFeatures = require("../utils/apiFeatures");
+const AppError = require("../utils/appError");
 
-exports.getWords = async (req, res, next) => {
-  try {
-    const features = new APIFeatures(Word.find(), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
-    const words = await features.query;
+const catchAsync = require("../utils/catchAsync");
 
-    const response = {
-      status: "success",
-      count: words.length,
-      data: words,
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getWord = async (req, res, next) => {
+exports.checkWord = catchAsync(async (req, res, next) => {
   const wordId = req.params.wordId;
-  try {
-    const word = await Word.findById(wordId);
-    const response = {
-      status: "success",
-      data: word,
-    };
-
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
+  const word = await Word.findById(wordId);
+  if (!word) {
+    const error = new AppError("Word not found!", 404);
+    return next(error);
   }
-};
+  next();
+});
 
-exports.postWord = async (req, res, next) => {
+exports.getWords = catchAsync(async (req, res, next) => {
+  const features = new APIFeatures(Word.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+  const words = await features.query;
+
+  const response = {
+    status: "success",
+    count: words.length,
+    data: words,
+  };
+
+  res.status(200).json(response);
+});
+
+exports.getWord = catchAsync(async (req, res, next) => {
+  const wordId = req.params.wordId;
+  const word = await Word.findById(wordId);
+  const response = {
+    status: "success",
+    data: word,
+  };
+
+  res.status(200).json(response);
+});
+
+exports.postWord = catchAsync(async (req, res, next) => {
   const wordBody = req.body;
-  try {
-    const word = await Word.create(wordBody);
-    const response = {
-      status: "success",
-      data: word,
-    };
+  const word = await Word.create(wordBody);
+  const response = {
+    status: "success",
+    data: word,
+  };
 
-    res.status(201).json(response);
-  } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      error,
-    })
-    // next(error);
-  }
-};
+  res.status(201).json(response);
+});
 
-exports.patchWord = async (req, res, next) => {
+exports.patchWord = catchAsync(async (req, res, next) => {
   const wordId = req.params.wordId;
   const wordBody = req.body;
-  try {
-    const word = await Word.findByIdAndUpdate(wordId, wordBody, {
-      new: true,
-      runValidators: true,
-    });
-    const response = {
-      status: "success",
-      data: word,
-    };
+  const word = await Word.findByIdAndUpdate(wordId, wordBody, {
+    new: true,
+    runValidators: true,
+  });
+  const response = {
+    status: "success",
+    data: word,
+  };
 
-    res.status(201).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
+  res.status(201).json(response);
+});
 
-exports.deleteWord = async (req, res, next) => {
+exports.deleteWord = catchAsync(async (req, res, next) => {
   const wordId = req.params.wordId;
-  try {
-    await Word.findByIdAndDelete(wordId);
-    const response = {
-      status: "success",
-      data: null,
-    };
+  await Word.findByIdAndDelete(wordId);
+  const response = {
+    status: "success",
+    data: null,
+  };
 
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
+  res.status(200).json(response);
+});
 
-exports.getWordStats = async (req, res, next) => {
-  try {
-    const stats = await Word.aggregate([
-      {
-        $match: { rating: { $gte: 4.5 } },
+exports.getWordStats = catchAsync(async (req, res, next) => {
+  const stats = await Word.aggregate([
+    {
+      $match: { rating: { $gte: 4.5 } },
+    },
+    {
+      $group: {
+        _id: "$type",
+        numWords: { $sum: 1 },
+        avgRating: { $avg: "$rating" },
       },
-      {
-        $group: {
-          _id: "$type",
-          numWords: { $sum: 1 },
-          avgRating: { $avg: "$rating" },
-        },
-      },
-    ]);
-    const response = {
-      status: "success",
-      data: stats,
-    };
+    },
+  ]);
+  const response = {
+    status: "success",
+    data: stats,
+  };
 
-    res.status(200).json(response);
-  } catch (error) {
-    next(error);
-  }
-};
+  res.status(200).json(response);
+});

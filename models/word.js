@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
-const validator = require('validator');
+const validator = require("validator");
 
 const Schema = mongoose.Schema;
 
@@ -9,6 +9,7 @@ const wordSchema = new Schema(
     basic: {
       type: String,
       required: [true, "A word must have basic form"],
+      unique: true,
     },
     type: {
       type: Array,
