@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const Word = require("../models/word");
 
 const APIFeatures = require("../utils/apiFeatures");

@@ -11,8 +11,9 @@ const database = require("./config/database");
 
 const AppError = require("./utils/appError");
 
-const wordRoutes = require("./routes/word");
 const authRoutes = require("./routes/auth");
+const wordRoutes = require("./routes/word");
+
 const globalErrorHandler = require("./controllers/error");
 
 const app = express();
