@@ -4,5 +4,6 @@ module.exports = {
     useUnifiedTopology: true,
     useNewUrlParser: true,
     useCreateIndex: true,
+    useFindAndModify: false,
   },
 };
